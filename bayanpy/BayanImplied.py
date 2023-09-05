@@ -122,17 +122,17 @@ def get_graph_from_network_name(network_name, sub_name=None):
     return G
 
 
-def get_local_clustering_coefficient(G, node: int):
+def get_local_clustering_coefficient(G, node: int, AdjacencyMatrix):
     """
     Returns the clustering coefficient for the input node in the input graph
     """
-    neighbours = nx.adjacency_matrix(G)[:node].indices
+    neighbours = AdjacencyMatrix[:node].indices
     if neighbours.shape[0] <= 1:
         return 0.0
     num_possible_edges = ((neighbours.shape[0]) * (neighbours.shape[0] - 1)) / 2
     num_actual_edges = 0
     for neighbour in neighbours:
-        num_actual_edges += np.intersect1d(neighbours, nx.adjacency_matrix(G)[:neighbour].indices).shape[0]
+        num_actual_edges += np.intersect1d(neighbours, AdjacencyMatrix[:neighbour].indices).shape[0]
     num_actual_edges = num_actual_edges / 2
     return num_actual_edges / num_possible_edges
 
@@ -142,8 +142,9 @@ def clique_filtering(G, resolution):
     Returns G' which is a clique reduction on the input graph G
     """
     lcc_dict = {}
+    AdjacencyMatrix = nx.adjacency_matrix(G)
     for node in G.nodes():
-        lcc_dict[node] = get_local_clustering_coefficient(G, node)
+        lcc_dict[node] = get_local_clustering_coefficient(G, node, AdjacencyMatrix)
     shrink_dict = {}
     for node in G.nodes():
         skip = False
@@ -153,7 +154,7 @@ def clique_filtering(G, resolution):
         if skip:
             shrink_dict[node] = node
             continue
-        neighbours = nx.adjacency_matrix(G)[:node].indices
+        neighbours = AdjacencyMatrix[:node].indices
         if neighbours.shape[0] == 1:
             shrink_dict[node] = neighbours[0]
             continue
